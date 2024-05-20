@@ -3,19 +3,31 @@ import tornado.ioloop
 import tornado.iostream
 import tornado.tcpserver
 
-import components.clientModul
+import components.clientModul, components.Router
 
-class MyTCPServer(tornado.tcpserver.TCPServer):
+class CoreTCPServer(tornado.tcpserver.TCPServer):
+
+    __client_list = {}
+    __room_list = []
+
+    __router = components.Router.Router()
 
     async def handle_stream(self, stream, address):
-        print("New connection from:", address)  # Выводим информацию о новом подключении
+
+        self.__client_list[f"{str(address[0])}:{str(address[1])}"] = {}
 
         client = components.clientModul.Client(address, stream)
+        client.set_update_system(self.__router)
+        
+        try:
+            await client.run_loop()
+        except tornado.iostream.StreamClosedError:
+            del self.__client_list[f"{str(address[0])}:{str(address[1])}"]
 
-        await client.run_loop()
+            client.remove_player()
 
 def run_server(ip, port):
-    server = MyTCPServer()
+    server = CoreTCPServer()
     server.listen(port, ip)
 
     print(f"[\033[34m INFO \033[0m]Server started:\n IP:{ip}\n   PORT:{port}")

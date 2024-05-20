@@ -1,7 +1,9 @@
-import tornado
+import tornado, json
 
 class Client():
     __update_system = None
+    __nik_name = ""
+    isConect = True
 
     def __init__(self, addr, socket):
         
@@ -12,25 +14,31 @@ class Client():
         
         self.__update_system = sys
     
+    def set_nik_name(self, name):
+
+        self.__nik_name = name
+    
+    def get_addr(self):
+        return self.__addr
+    
+    async def fire_client(self, mess):
+
+        await self.__socket.write((json.dumps(mess) + "\n").encode())
+    
     async def run_loop(self):
 
-        a = "200"
-
         while True:
-            try:
-                data = await self.__socket.read_until(b"\n")  # Читаем данные из потока до символа конца строки
-                if not data:
-                    print("Connection closed by:", self.__addr)  # Если данные пустые, значит соединение закрыто
-                    break
-                message = data.decode().strip()  # Декодируем данные и убираем символы перевода строки и пробелы
-                print(f"Received message from {self.__addr}: {message}")  # Выводим полученное сообщение в консоль
+            data = await self.__socket.read_until(b"\n")
 
-                if message == "1":
-                    await self.__socket.write(a.encode())
-                else:
-                    a = message
-                    await self.__socket.write("200".encode())
-                
-            except tornado.iostream.StreamClosedError:
-                print("Connection closed by:", self.__addr)  # Если возникает ошибка закрытия потока, выводим информацию
+            if not data:
                 break
+
+            message = json.loads(data.decode().strip())
+
+            resp = self.__update_system.update(message, self)
+
+            await self.__socket.write((json.dumps(resp) + "\n").encode())
+    
+    def remove_player(self):
+
+        self.__update_system.remove_player(self)
