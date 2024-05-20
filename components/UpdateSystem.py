@@ -20,6 +20,8 @@ class GameCore():
 
             }
         }
+
+        self.unit_list = {}
     
     def add_player(self, player):
 
@@ -172,3 +174,9 @@ class HostGateWay():
             "code": 200,
             "body": self.game_core.lobby.lobby_code
         }
+    
+    def update_unit(self, arg, client):
+
+        self.game_core.unit_list[arg["id"]] = arg["body"]
+
+        print(self.game_core.unit_list)
