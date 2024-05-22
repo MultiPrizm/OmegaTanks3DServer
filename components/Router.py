@@ -16,7 +16,8 @@ class Router():
             },
             "POST":{
                 "REG": self.set_client_name,
-                "CREATELOBBY": self.create_lobby
+                "CREATELOBBY": self.create_lobby,
+                "JOINTOLOBBY": self.join_lobby
             }
         }
 
@@ -45,40 +46,35 @@ class Router():
 
         del self.lobby_list[code]
 
-    def update(self, recv, client):
+    async def update(self, recv, client):
 
         addr = client.get_addr()
 
         print(recv)
 
         try:
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
 
             resp = self.__RULES[recv["type"]][recv["name"]](recv["body"], client)
-
-            resp = json.dumps(resp)
-
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
+        
         except KeyError:
 
             resp = {
-                "code": 404,
-                "body": {
-                    "aaa": 1
-                }
+                "code": 404
             }
 
-            resp = json.dumps(resp)
+        resp = json.dumps(resp)
 
-            return {
-                "id": recv["id"],
-                "response": resp
-            }
+        resp2 = {
+            "name": recv["name"],
+            "response": resp
+        }
+
+        resp2 = json.dumps(resp2)
 
         return {
             "id": recv["id"],
-            "response": resp
-        }
+            "response": resp2
+        }   
     
     def get_version(self, arg, client):
 
@@ -119,8 +115,6 @@ class Router():
 
         code = self.get_lobby_code()
         self.lobby_list[code] = Lobby(self, code)
-        print("aaa")
-        self.lobby_list[code].add_player(client)
         self.lobby_list[code].set_host(client)
 
         return {
@@ -131,3 +125,8 @@ class Router():
     def join_lobby(self, arg, client):
         
         self.lobby_list[arg].add_player(client)
+
+        return {
+            "code": 200,
+            "body": "joined to lobby"
+        }

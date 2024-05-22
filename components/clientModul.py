@@ -2,7 +2,7 @@ import tornado, json
 
 class Client():
     __update_system = None
-    __nik_name = ""
+    nik_name = "Gost"
     isConect = True
 
     def __init__(self, addr, socket):
@@ -16,7 +16,7 @@ class Client():
     
     def set_nik_name(self, name):
 
-        self.__nik_name = name
+        self.nik_name = name
     
     def get_addr(self):
         return self.__addr
@@ -35,7 +35,7 @@ class Client():
 
             message = json.loads(data.decode().strip())
 
-            resp = self.__update_system.update(message, self)
+            resp = await self.__update_system.update(message, self)
 
             await self.__socket.write((json.dumps(resp) + "\n").encode())
     

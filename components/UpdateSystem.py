@@ -14,14 +14,17 @@ class GameCore():
             "GET":{
                 "PING": self.ping,
                 "GETAPI": self.get_api,
-                "GETLOBBYCODE": self.get_lobby_code
+                "GETLOBBYCODE": self.get_lobby_code,
+                "GETPLAYERS": self.get_players
             },
             "POST":{
-
+                "UPDATEPLAYER": self.update_player
             }
         }
 
         self.unit_list = {}
+
+        self.players_unit = {}
     
     def add_player(self, player):
 
@@ -36,38 +39,34 @@ class GameCore():
         self.host_gate_way = HostGateWay(self, player)
         player.set_update_system(self.host_gate_way)
 
-    def update(self, recv, client):
+    async def update(self, recv, client):
 
         addr = client.get_addr()
 
         print(recv)
 
         try:
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
 
             resp = self.__RULES[recv["type"]][recv["name"]](recv["body"], client)
+        
+        except None:
 
-            resp = json.dumps(resp)
-
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
-        except KeyError:
             resp = {
-                "code": 404,
-                "body": {
-                    "aaa": 1
-                }
+                "code": 404
             }
 
-            resp = json.dumps(resp)
+        resp = json.dumps(resp)
 
-            return {
-                "id": recv["id"],
-                "response": resp
-            }
+        resp2 = {
+            "name": recv["name"],
+            "response": resp
+        }
+
+        resp2 = json.dumps(resp2)
 
         return {
             "id": recv["id"],
-            "response": resp
+            "response": resp2
         }
     
     def fire_clients(self, mess):
@@ -96,6 +95,36 @@ class GameCore():
             "code": 200,
             "body": self.lobby.lobby_code
         }
+    
+    def get_players(self, arg, client):
+
+        res = []
+
+        for i in self.player_list:
+
+            res.append(i.nik_name)
+
+        print(res)
+
+        return {
+            "code": 200,
+            "body": res
+        }
+    
+    def update_player(self, arg, client):
+        
+        if arg["id"] in self.players_unit:
+            
+            if id(self.players_unit[arg["id"]]["client"]) == id(client):
+
+                self.players_unit[arg["id"]]["body"] = arg["body"]
+                print(self.players_unit)
+
+        else:
+            self.players_unit[arg["id"]] = {
+                "client": client,
+                "body": arg["body"]
+            }
 
 
 class HostGateWay():
@@ -109,10 +138,11 @@ class HostGateWay():
             "GET":{
                 "PING": self.ping,
                 "GETAPI": self.get_api,
-                "GETLOBBYCODE": self.get_lobby_code
+                "GETLOBBYCODE": self.get_lobby_code,
+                "GETPLAYERS": self.game_core.get_players
             },
             "POST":{
-
+                "UPDATEPLAYER": self.game_core.update_player
             }
         }
     
@@ -120,38 +150,34 @@ class HostGateWay():
 
         self.game_core.lobby.remove_lobby()
     
-    def update(self, recv, client):
+    async def update(self, recv, client):
 
         addr = client.get_addr()
 
-        print(recv)
+        #print(recv)
 
         try:
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
 
             resp = self.__RULES[recv["type"]][recv["name"]](recv["body"], client)
-
-            resp = json.dumps(resp)
-
-            #print(f"[\033[34m INFO \033[0m]Sing message:{addr[0]}:{addr[1]} type:{recv["type"]} name:{recv["name"]} body:{recv["body"]}")
+        
         except KeyError:
+
             resp = {
-                "code": 404,
-                "body": {
-                    "aaa": 1
-                }
+                "code": 404
             }
 
-            resp = json.dumps(resp)
+        resp = json.dumps(resp)
 
-            return {
-                "id": recv["id"],
-                "response": resp
-            }
+        resp2 = {
+            "name": recv["name"],
+            "response": resp
+        }
+
+        resp2 = json.dumps(resp2)
 
         return {
             "id": recv["id"],
-            "response": resp
+            "response": resp2
         }
     
     def get_api(self, arg, client):
@@ -175,8 +201,10 @@ class HostGateWay():
             "body": self.game_core.lobby.lobby_code
         }
     
-    def update_unit(self, arg, client):
+    async def send_mes_to_player_servise(self, arg, client = None):
+        mes = {
+            "id": "player_servise",
+            "response": arg
+        }
 
-        self.game_core.unit_list[arg["id"]] = arg["body"]
-
-        print(self.game_core.unit_list)
+        await self.host.fire_client(mes)
