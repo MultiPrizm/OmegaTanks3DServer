@@ -2,18 +2,6 @@ import components.info
 import json
 import random
 
-
-def lobby_decorator(func):
-
-    def wraper(*arg):
-
-        res = func(*arg)
-
-        return res
-
-    return wraper
-
-
 class GameCore():
 
     def __init__(self, lobby):
@@ -37,6 +25,8 @@ class GameCore():
         self.unit_list = {}
 
         self.players_unit = {}
+
+        self.status_game = False
     
     def add_player(self, player):
 
@@ -47,6 +37,21 @@ class GameCore():
         self.player_list.remove(player)
         self.lobby.remove_player(player)
     
+    def lobby_decorator(self, func):
+
+        def wraper(*arg):
+
+            if self.status_game:
+                res = func(*arg)
+            else:
+                res = {
+                    "code": 401
+                }
+
+            return res
+
+        return wraper
+
     def set_host(self, player):
         self.host_gate_way = HostGateWay(self, player)
         player.set_update_system(self.host_gate_way)
@@ -153,7 +158,8 @@ class HostGateWay():
                 "GETPLAYERS": self.game_core.get_players
             },
             "POST":{
-                "UPDATEPLAYER": self.game_core.update_player
+                "UPDATEPLAYER": self.game_core.update_player,
+                "STARTGAME": self.start_game
             }
         }
     
@@ -212,10 +218,25 @@ class HostGateWay():
             "body": self.game_core.lobby.lobby_code
         }
     
-    async def send_mes_to_player_servise(self, arg, client = None):
-        mes = {
-            "id": "player_servise",
-            "response": arg
+    def start_game(self, arg, client):
+
+        req = {
+            "code": 200,
+            "body": "game started"
         }
 
-        await self.host.fire_client(mes)
+        resp = json.dumps(resp)
+
+        resp2 = {
+            "name": "STARTGAME",
+            "response": resp
+        }
+
+        resp2 = json.dumps(resp2)
+
+        resp3 = {
+            "id": "EventSystem",
+            "response": resp2
+        }
+
+        self.game_core.fire_clients(resp3)
