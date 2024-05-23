@@ -52,4 +52,4 @@ class Lobby():
 
         mes_main = json.dumps(mes_main)
 
-        asyncio.create_task(self.game_core.host_gate_way.send_mes_to_player_servise(mes_main))
+        self.game_core.host_gate_way.send_mes_to_player_servise(mes_main)
