@@ -37,11 +37,11 @@ class GameCore():
         self.player_list.remove(player)
         self.lobby.remove_player(player)
     
-    def lobby_decorator(self, func):
+    def lobby_decorator(func, ** self):
 
         def wraper(*arg):
 
-            if self.status_game:
+            if self["self"].status_game:
                 res = func(*arg)
             else:
                 res = {
@@ -225,11 +225,11 @@ class HostGateWay():
             "body": "game started"
         }
 
-        resp = json.dumps(resp)
+        req = json.dumps(req)
 
         resp2 = {
             "name": "STARTGAME",
-            "response": resp
+            "response": req
         }
 
         resp2 = json.dumps(resp2)
