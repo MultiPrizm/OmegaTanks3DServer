@@ -38,18 +38,3 @@ class Lobby():
         self.game_core.add_player(player)
 
         self.game_core.set_host(player)
-
-        mes_level2 = {
-            "name": player.nik_name
-        }
-
-        mes_level2 = json.dumps(mes_level2)
-
-        mes_main = {
-            "name": "NewPlayer",
-            "body": mes_level2
-        }
-
-        mes_main = json.dumps(mes_main)
-
-        self.game_core.host_gate_way.send_mes_to_player_servise(mes_main)
