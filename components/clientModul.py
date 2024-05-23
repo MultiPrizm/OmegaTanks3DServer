@@ -21,9 +21,9 @@ class Client():
     def get_addr(self):
         return self.__addr
     
-    async def fire_client(self, mess):
+    def fire_client(self, mess):
 
-        await self.__socket.write((json.dumps(mess) + "\n").encode())
+        self.__socket.write((json.dumps(mess) + "\n").encode())
     
     async def run_loop(self):
 

@@ -2,6 +2,18 @@ import components.info
 import json
 import random
 
+
+def lobby_decorator(func):
+
+    def wraper(*arg):
+
+        res = func(*arg)
+
+        return res
+
+    return wraper
+
+
 class GameCore():
 
     def __init__(self, lobby):
@@ -111,15 +123,16 @@ class GameCore():
             "body": res
         }
     
-    def update_player(self, arg, client):
-        
-        if arg["id"] in self.players_unit:
-            
-            if id(self.players_unit[arg["id"]]["client"]) == id(client):
+    @lobby_decorator
+    def update_player(self, recv, client):
 
+        arg = json.loads(recv)
+    
+        if arg["id"] in self.players_unit:
+
+            if id(self.players_unit[arg["id"]]["client"]) == id(client):
                 self.players_unit[arg["id"]]["body"] = arg["body"]
                 print(self.players_unit)
-
         else:
             self.players_unit[arg["id"]] = {
                 "client": client,
@@ -154,7 +167,7 @@ class HostGateWay():
 
         addr = client.get_addr()
 
-        #print(recv)
+        print(recv)
 
         try:
 

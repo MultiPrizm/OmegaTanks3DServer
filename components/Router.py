@@ -124,7 +124,9 @@ class Router():
     
     def join_lobby(self, arg, client):
         
-        self.lobby_list[arg].add_player(client)
+        if arg in self.lobby_list:
+
+            self.lobby_list[arg].add_player(client)
 
         return {
             "code": 200,
