@@ -37,11 +37,11 @@ class GameCore():
         self.player_list.remove(player)
         self.lobby.remove_player(player)
     
-    def lobby_decorator(self, func):
+    def lobby_decorator(func, ** self):
 
         def wraper(*arg):
 
-            if self.status_game:
+            if self["self"].status_game:
                 res = func(*arg)
             else:
                 res = {
