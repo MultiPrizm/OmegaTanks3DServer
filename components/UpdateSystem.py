@@ -116,8 +116,6 @@ class GameCore():
 
             res.append(i.nik_name)
 
-        print(res)
-
         return {
             "code": 200,
             "body": res
