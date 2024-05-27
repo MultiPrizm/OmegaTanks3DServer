@@ -35,6 +35,8 @@ class Client():
 
             message = json.loads(data.decode().strip())
 
+            print(message)
+
             resp = await self.__update_system.update(message, self)
 
             await self.__socket.write((json.dumps(resp) + "\n").encode())

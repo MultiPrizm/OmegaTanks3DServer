@@ -50,8 +50,6 @@ class Router():
 
         addr = client.get_addr()
 
-        print(recv)
-
         try:
 
             resp = self.__RULES[recv["type"]][recv["name"]](recv["body"], client)
@@ -126,9 +124,16 @@ class Router():
         
         if arg in self.lobby_list:
 
-            self.lobby_list[arg].add_player(client)
+            res = self.lobby_list[arg].add_player(client)
+        
+        if res:
 
-        return {
-            "code": 200,
-            "body": "joined to lobby"
-        }
+            return {
+                "code": 200,
+                "body": ""
+            }
+        else:
+            return {
+                "code": 401,
+                "body": ""
+            }

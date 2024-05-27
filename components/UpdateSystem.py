@@ -15,10 +15,12 @@ class GameCore():
                 "PING": self.ping,
                 "GETAPI": self.get_api,
                 "GETLOBBYCODE": self.get_lobby_code,
-                "GETPLAYERS": self.get_players
+                "GETPLAYERS": self.get_players_list,
+                "GETSTATUSGAME": self.get_game_status
             },
             "POST":{
-                "UPDATEPLAYER": self.update_player
+                "UPDATEPLAYER": self.update_player,
+                "LOADPLAYER": self.load_local_player
             }
         }
 
@@ -59,8 +61,6 @@ class GameCore():
     async def update(self, recv, client):
 
         addr = client.get_addr()
-
-        print(recv)
 
         try:
 
@@ -113,7 +113,7 @@ class GameCore():
             "body": self.lobby.lobby_code
         }
     
-    def get_players(self, arg, client):
+    def get_players_list(self, arg, client):
 
         res = []
 
@@ -124,6 +124,73 @@ class GameCore():
         return {
             "code": 200,
             "body": res
+        }
+    
+    def get_game_status(self, arg, client):
+        
+        res = "no"
+
+        if self.status_game:
+            res = "yes"
+
+        return {
+            "code": 200,
+            "body": res
+        }
+
+    def loads_players(self, arg, client):
+
+        res = []
+
+        for i in self.players_unit.keys():
+
+            if id(self.players_unit[i]["client"]) != id(client):
+                res.append({
+                        "id": i,
+                        "body": self.players_unit[i]
+                    })
+
+        return {
+            "code": 200,
+            "body": res
+        }
+    
+    def load_local_player(self, recv, client):
+        arg = json.loads(recv)
+
+        if not arg["id"] in self.players_unit:
+            self.players_unit[arg["id"]] = {
+                    "client": client,
+                    "body": arg["body"]
+                }
+        
+        print(len(self.players_unit.keys()),":",len(self.player_list))
+
+        if len(self.players_unit.keys()) >= len(self.player_list):
+
+            req = {
+            "code": 200,
+            "body": "game started"
+            }
+
+            req = json.dumps(req)
+
+            resp2 = {
+                "name": "LOADCOMPLETE",
+                "response": req
+            }
+
+            resp2 = json.dumps(resp2)
+
+            resp3 = {
+                "id": "PlayerServise",
+                "response": resp2
+            }
+
+            self.fire_clients(resp3)
+        
+        return {
+            "code": 200
         }
     
     @lobby_decorator
@@ -155,10 +222,12 @@ class HostGateWay():
                 "PING": self.ping,
                 "GETAPI": self.get_api,
                 "GETLOBBYCODE": self.get_lobby_code,
-                "GETPLAYERS": self.game_core.get_players
+                "GETPLAYERS": self.game_core.get_players_list,
+                "GETSTATUSGAME": self.game_core.get_game_status
             },
             "POST":{
                 "UPDATEPLAYER": self.game_core.update_player,
+                "LOADPLAYER": self.game_core.load_local_player,
                 "STARTGAME": self.start_game
             }
         }
@@ -170,8 +239,6 @@ class HostGateWay():
     async def update(self, recv, client):
 
         addr = client.get_addr()
-
-        print(recv)
 
         try:
 
@@ -220,6 +287,7 @@ class HostGateWay():
     
     def start_game(self, arg, client):
 
+        self.game_core.status_game = True
         req = {
             "code": 200,
             "body": "game started"

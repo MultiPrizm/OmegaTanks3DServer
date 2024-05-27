@@ -20,9 +20,14 @@ class Lobby():
     
     def add_player(self, player):
 
-        self.player_list.append(player)
-        player.set_update_system(self.game_core)
-        self.game_core.add_player(player)
+        if not self.game_core.status_game:
+            self.player_list.append(player)
+            player.set_update_system(self.game_core)
+            self.game_core.add_player(player)
+
+            return True
+        
+        return False
     
     def remove_player(self, player):
 
